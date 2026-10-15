@@ -61,7 +61,12 @@ The CLI/driver orchestrates the stages (`src/main.cpp`, `src/driver.cpp`).
   assignment, condition types (`if`/`while` must be `bool`), arithmetic and
   comparison operand types, function argument count/types, return type, and
   presence of a `return` in non-void functions.
-- `print` is registered as a built-in that accepts any value.
+- `print` is registered as a built-in that accepts any value. The arithmetic
+  built-ins `jodo`/`ghatao`/`guna`/`bhaag` are reserved names whose types are
+  computed inline (numeric operands, `float` if either side is `float`).
+- Top-level statements (`StmtDecl`) are collected by the parser and wrapped
+  into an implicit `main`, so script-style programs become ordinary functions
+  before semantic analysis runs.
 
 ## LLVM decisions
 

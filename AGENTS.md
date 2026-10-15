@@ -437,12 +437,16 @@ Ubuntu 22.04, Clang/LLVM 15.0.7, Flex 2.6.4, Bison 3.8.2, CMake 4.2.3, Ninja.
 ## Verified evidence
 - `docker compose build test` / `docker build --target test` configures CMake,
   generates the Flex lexer and Bison parser, builds `myl`, and runs CTest
-  (9/9 tests pass).
-- `docker run --rm myl-test` re-runs CTest (9/9 pass).
+  (12/12 tests pass).
+- `docker run --rm my_lang-test bash tests/smoke.sh` runs the full end-to-end
+  smoke suite and passes.
 - `bash tests/smoke.sh` builds and runs real programs:
-  `hello.myl` -> `Hello, World!` / `70` / `0`, `functions.myl` -> `30`,
-  `arithmetic.myl` -> `70` / `90` / `75` / `1`; `invalid_syntax.myl` and
-  `type_error.myl` fail with diagnostics and nonzero exit codes.
+  `hello.myl` -> `Hello, World!` / `70`, `functions.myl` -> `30`,
+  `arithmetic.myl` -> `70` / `90` / `75` / `1`;
+  `hindi.myl` -> `Namaste Duniya!` / `70` / `sahi`,
+  `hindi_functions.myl` -> `30` / `sahi`; `invalid_syntax.myl`,
+  `type_error.myl`, and `hindi_type_error.myl` fail with diagnostics and
+  nonzero exit codes.
 
 ## Implemented
 - Flex lexer (`src/lexer.l`) and Bison parser (`src/parser.y`) building the AST.
@@ -452,6 +456,16 @@ Ubuntu 22.04, Clang/LLVM 15.0.7, Flex 2.6.4, Bison 3.8.2, CMake 4.2.3, Ninja.
 - LLVM 15 IR generation + verification, optimization, native object/executable
   generation (`src/codegen.cpp`).
 - Built-in `print` for int/float/bool/string values.
+- Hindi keyword aliases (Hinglish syntax), all interchangeable with the English
+  spelling: `rakho` (= `let mut`, always mutable), `bolo expr;` (= `print`
+  statement, no parentheses), `agar`/`warna` (`if`/`else`), `repeat` (`while`),
+  `kaam` (`fn`), `bhejo` (`return`), `sahi`/`galat` (`true`/`false`),
+  `ank` (`int`).
+- Built-in arithmetic functions `jodo`/`ghatao`/`guna`/`bhaag` (add/sub/mul/div)
+  with numeric type checking; result is `float` if either operand is `float`.
+  Names are reserved in the global scope.
+- Script mode: top-level statements are wrapped into an implicit `main`
+  returning `0` (`StmtDecl` in the AST).
 - CLI: `check`, `emit-ir`, `build`, `run`, `--help`, `--version`.
 - Language: variables (`let` / `let mut`), typed and inferred declarations,
   assignment, arithmetic/comparison/logical operators with precedence, unary
@@ -462,12 +476,17 @@ Ubuntu 22.04, Clang/LLVM 15.0.7, Flex 2.6.4, Bison 3.8.2, CMake 4.2.3, Ninja.
 
 ## Deferred (documented, not implemented)
 - Arrays, structs, modules/imports, `for`, `break`/`continue`.
-- Global variables outside functions; string concatenation/formatting.
+- True global variables shared across functions (top-level `let`/`rakho`
+  become locals of the implicit `main`); string concatenation/formatting.
 - Debug information, JIT execution, language server.
 
 ## Known limitations
-- The grammar has 2 shift/reduce conflicts (classic dangling-`else`); Bison
-  resolves them by shifting, i.e. `else` binds to the nearest `if`.
+- The grammar has 4 shift/reduce conflicts (classic dangling-`else`); Bison
+  resolves them by shifting, i.e. `else`/`warna` binds to the nearest
+  `if`/`agar`.
+- Script mode (`main` synthesized from top-level statements) is emitted after
+  user functions. Declaring `main` explicitly *and* using top-level statements
+  produces an extra `main` symbol; use one style per file.
 - Integers are i64 and `main` is emitted as `i64 @main()`, linked via
   `cc -no-pie` (works on x86-64 System V; exit status uses the low 32 bits).
 - Codegen uses a flat variable map (no lexical shadowing) and cannot reference

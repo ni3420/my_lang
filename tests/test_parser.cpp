@@ -83,6 +83,36 @@ void test_parse_invalid_syntax() {
     std::cout << "test_parse_invalid_syntax: PASS\n";
 }
 
+void test_parse_hindi_script() {
+    std::vector<std::string> errors;
+    auto ast = parse("rakho x = 10;\nbolo jodo(x, guna(2, 3));", errors);
+    assert(ast != nullptr);
+    assert(errors.empty());
+    // Top-level statements are wrapped into a single implicit `main`.
+    assert(ast->declarations.size() == 1);
+    assert(dynamic_cast<myl::FunctionDecl*>(ast->declarations[0].get()) != nullptr);
+    std::cout << "test_parse_hindi_script: PASS\n";
+}
+
+void test_parse_hindi_function() {
+    std::vector<std::string> errors;
+    auto ast = parse("kaam badhao(a: ank, b: ank) -> ank { bhejo jodo(a, b); }", errors);
+    assert(ast != nullptr);
+    assert(errors.empty());
+    assert(ast->declarations.size() == 1);
+    std::cout << "test_parse_hindi_function: PASS\n";
+}
+
+void test_parse_hindi_control_flow() {
+    std::vector<std::string> errors;
+    auto ast = parse("kaam main() -> ank { rakho x = 3; agar (x > 1) { bolo sahi; } "
+                     "warna { bolo galat; } repeat (x > 0) { x = ghatao(x, 1); } bhejo 0; }",
+                     errors);
+    assert(ast != nullptr);
+    assert(errors.empty());
+    std::cout << "test_parse_hindi_control_flow: PASS\n";
+}
+
 int main() {
     test_parse_simple_var();
     test_parse_var_with_type();
@@ -93,6 +123,9 @@ int main() {
     test_parse_precedence();
     test_parse_call_expr();
     test_parse_invalid_syntax();
+    test_parse_hindi_script();
+    test_parse_hindi_function();
+    test_parse_hindi_control_flow();
     std::cout << "All parser tests passed!\n";
     return 0;
 }

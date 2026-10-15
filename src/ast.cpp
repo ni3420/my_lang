@@ -129,6 +129,38 @@ llvm::Value* CallExpr::codegen(CodeGenContext& ctx) {
         return nullptr;
     }
 
+    // Arithmetic built-ins (Hindi aliases): jodo/ghatao/guna/bhaag.
+    if (callee == "jodo" || callee == "ghatao" ||
+        callee == "guna" || callee == "bhaag") {
+        if (args.size() != 2) return nullptr;
+
+        auto lhs = args[0]->codegen(ctx);
+        auto rhs = args[1]->codegen(ctx);
+        if (!lhs || !rhs) return nullptr;
+
+        bool isFloat = args[0]->type == Type::floatType() ||
+                       args[1]->type == Type::floatType();
+
+        if (isFloat) {
+            auto toDouble = [&](llvm::Value* v, const Type& t) -> llvm::Value* {
+                if (t == Type::floatType()) return v;
+                return builder.CreateSIToFP(v, llvm::Type::getDoubleTy(ctx.context()),
+                                            "tofloat");
+            };
+            lhs = toDouble(lhs, args[0]->type);
+            rhs = toDouble(rhs, args[1]->type);
+            if (callee == "jodo")   return builder.CreateFAdd(lhs, rhs, "fadd");
+            if (callee == "ghatao") return builder.CreateFSub(lhs, rhs, "fsub");
+            if (callee == "guna")   return builder.CreateFMul(lhs, rhs, "fmul");
+            return builder.CreateFDiv(lhs, rhs, "fdiv");
+        }
+
+        if (callee == "jodo")   return builder.CreateAdd(lhs, rhs, "add");
+        if (callee == "ghatao") return builder.CreateSub(lhs, rhs, "sub");
+        if (callee == "guna")   return builder.CreateMul(lhs, rhs, "mul");
+        return builder.CreateSDiv(lhs, rhs, "div");
+    }
+
     auto fn = ctx.getFunction(callee);
     if (!fn) return nullptr;
 
@@ -282,6 +314,10 @@ void WhileStmt::codegen(CodeGenContext& ctx) {
 
 void BlockStmt::codegen(CodeGenContext& ctx) {
     for (auto& stmt : statements) stmt->codegen(ctx);
+}
+
+void StmtDecl::codegen(CodeGenContext& ctx) {
+    if (stmt) stmt->codegen(ctx);
 }
 
 void Program::codegen(CodeGenContext& ctx) {

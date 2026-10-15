@@ -88,6 +88,44 @@ void test_semantic_argument_count() {
     std::cout << "test_semantic_argument_count: PASS\n";
 }
 
+void test_semantic_hindi_script_valid() {
+    auto errors = analyze(R"(
+        rakho x = 10;
+        rakho y = 20;
+        bolo "Namaste Duniya!";
+        bolo jodo(x, guna(y, 3));
+        agar (x > 5) { bolo "sahi"; } warna { bolo "galat"; }
+        repeat (x > 0) { x = ghatao(x, 1); }
+    )");
+    assert(errors.empty());
+    std::cout << "test_semantic_hindi_script_valid: PASS\n";
+}
+
+void test_semantic_hindi_function_valid() {
+    auto errors = analyze(R"(
+        kaam badhao(a: ank, b: ank) -> ank { bhejo jodo(a, b); }
+        kaam main() -> ank {
+            rakho r = badhao(1, 2);
+            agar (r == 3) { bolo sahi; }
+            bhejo 0;
+        }
+    )");
+    assert(errors.empty());
+    std::cout << "test_semantic_hindi_function_valid: PASS\n";
+}
+
+void test_semantic_builtin_type_error() {
+    auto errors = analyze("fn main() -> int { print(jodo(10, \"hello\")); return 0; }");
+    assert(!errors.empty());
+    std::cout << "test_semantic_builtin_type_error: PASS\n";
+}
+
+void test_semantic_builtin_arity_error() {
+    auto errors = analyze("fn main() -> int { print(guna(10)); return 0; }");
+    assert(!errors.empty());
+    std::cout << "test_semantic_builtin_arity_error: PASS\n";
+}
+
 int main() {
     test_semantic_valid_program();
     test_semantic_undefined_var();
@@ -100,6 +138,10 @@ int main() {
     test_semantic_void_function();
     test_semantic_assign_immutable();
     test_semantic_argument_count();
+    test_semantic_hindi_script_valid();
+    test_semantic_hindi_function_valid();
+    test_semantic_builtin_type_error();
+    test_semantic_builtin_arity_error();
     std::cout << "All semantic tests passed!\n";
     return 0;
 }

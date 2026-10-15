@@ -1,0 +1,3 @@
+rakho i = 1;
+
+repeat (i <= 10) { bolo jodo(2, guna(i, 2)); i = jodo(i, 1); }

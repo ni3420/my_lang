@@ -74,8 +74,9 @@ static myl::StmtPtr wrap_stmt(myl::Stmt* s) { return myl::StmtPtr(s); }
 }
 
 %token <str> Identifier IntegerLiteral FloatLiteral StringLiteral
-%token TrueKw FalseKw
+%token TrueKw FalseKw SahiKw GalatKw
 %token LetKw MutKw FnKw ReturnKw IfKw ElseKw WhileKw PrintKw
+%token RakhoKw BoloKw AgarKw WarnaKw RepeatKw KaamKw BhejoKw AnkKw
 %token IntKw FloatKw BoolKw StringKw VoidKw
 %token And Or Not
 %token Plus Minus Star Slash Percent
@@ -90,7 +91,7 @@ static myl::StmtPtr wrap_stmt(myl::Stmt* s) { return myl::StmtPtr(s); }
 %type <typekind> type_spec
 %type <stmt_vec> block statement_list
 %type <stmt> statement if_stmt while_stmt return_stmt expr_stmt
-%type <stmt> assignment_stmt var_decl_stmt
+%type <stmt> assignment_stmt var_decl_stmt bolo_stmt
 %type <expr> expression logical_or logical_and equality comparison term factor unary primary
 %type <expr_vec> argument_list
 %type <param_vec> parameter_list
@@ -111,8 +112,35 @@ static myl::StmtPtr wrap_stmt(myl::Stmt* s) { return myl::StmtPtr(s); }
 
 program:
     declaration_list {
+        std::vector<myl::DeclPtr> decls = take_decls($1);
+        std::vector<myl::DeclPtr> fnDecls;
+        std::vector<myl::StmtPtr> mainStmts;
+        myl::Location mainLoc;
+
+        for (auto& d : decls) {
+            if (auto* sd = dynamic_cast<myl::StmtDecl*>(d.get())) {
+                if (mainStmts.empty()) mainLoc = sd->loc;
+                mainStmts.push_back(std::move(sd->stmt));
+            } else {
+                fnDecls.push_back(std::move(d));
+            }
+        }
+
         result = new myl::Program();
-        result->declarations = take_decls($1);
+
+        // Script mode: top-level statements are wrapped into an implicit
+        // `main`. Programs that only contain function declarations are
+        // emitted unchanged.
+        if (!mainStmts.empty()) {
+            mainLoc.filename = g_myl_filename;
+            mainStmts.push_back(myl::StmtPtr(new myl::ReturnStmt(mainLoc,
+                myl::ExprPtr(new myl::IntegerLiteral(mainLoc, 0)))));
+            fnDecls.push_back(myl::DeclPtr(new myl::FunctionDecl(mainLoc, "main",
+                std::vector<myl::FunctionDecl::Param>(), myl::Type::intType(),
+                std::move(mainStmts))));
+        }
+
+        result->declarations = std::move(fnDecls);
     }
 ;
 
@@ -122,8 +150,8 @@ declaration_list:
 ;
 
 declaration:
-    var_decl { $$ = $1; }
-    | function_decl { $$ = $1; }
+    function_decl { $$ = $1; }
+    | statement { $$ = new myl::StmtDecl(loc_of(@1), wrap_stmt($1)); }
 ;
 
 var_decl:
@@ -141,6 +169,22 @@ var_decl:
     }
     | LetKw Identifier Assign expression Semicolon {
         $$ = new myl::VarDecl(loc_of(@1), *$2, myl::Type(), wrap($4), false);
+        delete $2;
+    }
+    | RakhoKw MutKw Identifier Colon type_spec Assign expression Semicolon {
+        $$ = new myl::VarDecl(loc_of(@1), *$3, to_type($5), wrap($7), true);
+        delete $3;
+    }
+    | RakhoKw Identifier Colon type_spec Assign expression Semicolon {
+        $$ = new myl::VarDecl(loc_of(@1), *$2, to_type($4), wrap($6), true);
+        delete $2;
+    }
+    | RakhoKw MutKw Identifier Assign expression Semicolon {
+        $$ = new myl::VarDecl(loc_of(@1), *$3, myl::Type(), wrap($5), true);
+        delete $3;
+    }
+    | RakhoKw Identifier Assign expression Semicolon {
+        $$ = new myl::VarDecl(loc_of(@1), *$2, myl::Type(), wrap($4), true);
         delete $2;
     }
 ;
@@ -167,10 +211,32 @@ function_decl:
                                    myl::Type::voidType(), take_stmts($5));
         delete $2;
     }
+    | KaamKw Identifier LParen parameter_list RParen Arrow type_spec block {
+        $$ = new myl::FunctionDecl(loc_of(@1), *$2, std::move(*$4), to_type($7), take_stmts($8));
+        delete $2; delete $4;
+    }
+    | KaamKw Identifier LParen parameter_list RParen block {
+        $$ = new myl::FunctionDecl(loc_of(@1), *$2, std::move(*$4),
+                                   myl::Type::voidType(), take_stmts($6));
+        delete $2; delete $4;
+    }
+    | KaamKw Identifier LParen RParen Arrow type_spec block {
+        $$ = new myl::FunctionDecl(loc_of(@1), *$2,
+                                   std::vector<myl::FunctionDecl::Param>(),
+                                   to_type($6), take_stmts($7));
+        delete $2;
+    }
+    | KaamKw Identifier LParen RParen block {
+        $$ = new myl::FunctionDecl(loc_of(@1), *$2,
+                                   std::vector<myl::FunctionDecl::Param>(),
+                                   myl::Type::voidType(), take_stmts($5));
+        delete $2;
+    }
 ;
 
 type_spec:
-    IntKw    { $$ = static_cast<int>(myl::TypeKind::Int); }
+    AnkKw    { $$ = static_cast<int>(myl::TypeKind::Int); }
+    | IntKw    { $$ = static_cast<int>(myl::TypeKind::Int); }
     | FloatKw  { $$ = static_cast<int>(myl::TypeKind::Float); }
     | BoolKw   { $$ = static_cast<int>(myl::TypeKind::Bool); }
     | StringKw { $$ = static_cast<int>(myl::TypeKind::String); }
@@ -205,8 +271,18 @@ statement:
     | return_stmt { $$ = $1; }
     | assignment_stmt { $$ = $1; }
     | var_decl_stmt { $$ = $1; }
+    | bolo_stmt { $$ = $1; }
     | expr_stmt { $$ = $1; }
     | block { $$ = new myl::BlockStmt(loc_of(@1), take_stmts($1)); }
+;
+
+bolo_stmt:
+    BoloKw expression Semicolon {
+        std::vector<myl::ExprPtr> args;
+        args.push_back(wrap($2));
+        $$ = new myl::ExprStmt(loc_of(@1),
+                myl::ExprPtr(new myl::CallExpr(loc_of(@1), "print", std::move(args))));
+    }
 ;
 
 var_decl_stmt:
@@ -233,10 +309,24 @@ if_stmt:
         $$ = new myl::IfStmt(loc_of(@1), wrap($3), std::move(thenB),
                              std::vector<myl::StmtPtr>());
     }
+    | AgarKw LParen expression RParen statement WarnaKw statement {
+        std::vector<myl::StmtPtr> thenB; thenB.push_back(wrap_stmt($5));
+        std::vector<myl::StmtPtr> elseB; elseB.push_back(wrap_stmt($7));
+        $$ = new myl::IfStmt(loc_of(@1), wrap($3), std::move(thenB), std::move(elseB));
+    }
+    | AgarKw LParen expression RParen statement {
+        std::vector<myl::StmtPtr> thenB; thenB.push_back(wrap_stmt($5));
+        $$ = new myl::IfStmt(loc_of(@1), wrap($3), std::move(thenB),
+                             std::vector<myl::StmtPtr>());
+    }
 ;
 
 while_stmt:
     WhileKw LParen expression RParen statement {
+        std::vector<myl::StmtPtr> body; body.push_back(wrap_stmt($5));
+        $$ = new myl::WhileStmt(loc_of(@1), wrap($3), std::move(body));
+    }
+    | RepeatKw LParen expression RParen statement {
         std::vector<myl::StmtPtr> body; body.push_back(wrap_stmt($5));
         $$ = new myl::WhileStmt(loc_of(@1), wrap($3), std::move(body));
     }
@@ -245,6 +335,8 @@ while_stmt:
 return_stmt:
     ReturnKw expression Semicolon { $$ = new myl::ReturnStmt(loc_of(@1), wrap($2)); }
     | ReturnKw Semicolon { $$ = new myl::ReturnStmt(loc_of(@1), myl::ExprPtr()); }
+    | BhejoKw expression Semicolon { $$ = new myl::ReturnStmt(loc_of(@1), wrap($2)); }
+    | BhejoKw Semicolon { $$ = new myl::ReturnStmt(loc_of(@1), myl::ExprPtr()); }
 ;
 
 expr_stmt:
@@ -333,6 +425,8 @@ primary:
     | FloatLiteral { $$ = new myl::FloatLiteral(loc_of(@1), std::stod(*$1)); delete $1; }
     | TrueKw { $$ = new myl::BoolLiteral(loc_of(@1), true); }
     | FalseKw { $$ = new myl::BoolLiteral(loc_of(@1), false); }
+    | SahiKw { $$ = new myl::BoolLiteral(loc_of(@1), true); }
+    | GalatKw { $$ = new myl::BoolLiteral(loc_of(@1), false); }
     | StringLiteral { $$ = new myl::StringLiteral(loc_of(@1), *$1); delete $1; }
     | Identifier { $$ = new myl::Identifier(loc_of(@1), *$1); delete $1; }
     | PrintKw LParen argument_list RParen {

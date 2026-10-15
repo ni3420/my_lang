@@ -96,7 +96,6 @@ Expected output:
 ```
 Hello, World!
 70
-0
 ```
 
 ## Using the CLI
@@ -129,6 +128,23 @@ fn main() -> int {
     print(add(x, 20));   // prints 30
     return 0;
 }
+```
+
+### Hinglish syntax
+
+Every keyword also has a Hindi alias (`rakho` = `let mut`, `bolo` = `print`,
+`agar`/`warna` = `if`/`else`, `repeat` = `while`, `kaam` = `fn`,
+`bhejo` = `return`, `sahi`/`galat` = `true`/`false`, `ank` = `int`) plus the
+arithmetic built-ins `jodo`/`ghatao`/`guna`/`bhaag`. Top-level statements are
+wrapped into an implicit `main`, so scripts need no `fn main` wrapper:
+
+```myl
+rakho x = 10;
+rakho y = 20;
+bolo "Namaste Duniya!";      // Namaste Duniya!
+bolo jodo(x, guna(y, 3));    // 70
+agar (x > 5) { bolo "sahi"; } warna { bolo "galat"; }
+repeat (x > 0) { x = ghatao(x, 1); }
 ```
 
 See [`docs/LANGUAGE_SPEC.md`](docs/LANGUAGE_SPEC.md) for the full grammar.

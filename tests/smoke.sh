@@ -29,6 +29,12 @@ echo "== run functions.myl =="
 echo "== run arithmetic.myl =="
 "$MYL" run examples/arithmetic.myl
 
+echo "== run hindi.myl =="
+"$MYL" run examples/hindi.myl
+
+echo "== run hindi_functions.myl =="
+"$MYL" run examples/hindi_functions.myl
+
 echo "== invalid_syntax.myl must fail =="
 if "$MYL" check examples/invalid_syntax.myl; then
     echo "ERROR: invalid_syntax.myl unexpectedly succeeded"
@@ -42,5 +48,12 @@ if "$MYL" check examples/type_error.myl; then
     exit 1
 fi
 echo "type_error: failed as expected"
+
+echo "== hindi_type_error.myl must fail =="
+if "$MYL" check examples/hindi_type_error.myl; then
+    echo "ERROR: hindi_type_error.myl unexpectedly succeeded"
+    exit 1
+fi
+echo "hindi_type_error: failed as expected"
 
 echo "ALL SMOKE TESTS PASSED"

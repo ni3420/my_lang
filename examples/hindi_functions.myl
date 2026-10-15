@@ -1,0 +1,14 @@
+kaam badhao(a: ank, b: ank) -> ank {
+    bhejo jodo(a, b);
+}
+
+kaam main() -> ank {
+    rakho result = badhao(10, 20);
+    bolo result;
+    agar (result == 30) {
+        bolo "sahi";
+    } warna {
+        bolo "galat";
+    }
+    bhejo 0;
+}

@@ -26,6 +26,15 @@ void SemanticAnalyzer::declareBuiltins() {
         Type::voidType(),
         false, true, nullptr
     });
+    // Arithmetic built-ins (Hindi aliases). Reserved so user code cannot
+    // redefine them; their types are computed in visitCallExpr.
+    for (const char* name : { "jodo", "ghatao", "guna", "bhaag" }) {
+        currentScope_->define(name, Symbol{
+            Symbol::Kind::Function,
+            Type::intType(),
+            false, true, nullptr
+        });
+    }
 }
 
 void SemanticAnalyzer::visitProgram(Program* prog) {
@@ -266,6 +275,25 @@ Type SemanticAnalyzer::visitCallExpr(CallExpr* expr) {
         for (auto& arg : expr->args) visitExpr(arg.get());
         expr->type = Type::voidType();
         return Type::voidType();
+    }
+
+    if (expr->callee == "jodo" || expr->callee == "ghatao" ||
+        expr->callee == "guna" || expr->callee == "bhaag") {
+        if (expr->args.size() != 2) {
+            error(expr->loc, "builtin '" + expr->callee + "' expects 2 arguments, got " +
+                             std::to_string(expr->args.size()));
+            expr->type = Type::voidType();
+            return Type::voidType();
+        }
+        auto leftType = visitExpr(expr->args[0].get());
+        auto rightType = visitExpr(expr->args[1].get());
+        if (!isNumericType(leftType) || !isNumericType(rightType)) {
+            error(expr->loc, "builtin '" + expr->callee + "' operands must be numeric");
+            expr->type = Type::voidType();
+            return Type::voidType();
+        }
+        expr->type = commonType(leftType, rightType);
+        return expr->type;
     }
 
     auto symOpt = currentScope_->lookup(expr->callee);

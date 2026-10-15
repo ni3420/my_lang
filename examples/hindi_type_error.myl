@@ -1,0 +1,2 @@
+rakho x = 10;
+bolo jodo(x, "hello");

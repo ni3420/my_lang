@@ -266,6 +266,16 @@ public:
     void codegen(CodeGenContext& ctx) override;
 };
 
+// A statement appearing in declaration position (script mode). The parser
+// collects these into an implicit `main` function.
+class StmtDecl : public Decl {
+public:
+    StmtPtr stmt;
+
+    StmtDecl(const Location& l, StmtPtr&& s) : Decl(l), stmt(std::move(s)) {}
+    void codegen(CodeGenContext& ctx) override;
+};
+
 class Program : public Decl {
 public:
     std::vector<DeclPtr> declarations;

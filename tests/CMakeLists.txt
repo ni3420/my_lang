@@ -34,6 +34,8 @@ endfunction()
 add_runner_test(integration_hello hello.myl "Hello, World!")
 add_runner_test(integration_functions functions.myl "30")
 add_runner_test(integration_arithmetic arithmetic.myl "70")
+add_runner_test(integration_hindi hindi.myl "Namaste Duniya!")
+add_runner_test(integration_hindi_functions hindi_functions.myl "sahi")
 
 function(add_negative_test name example)
     add_test(NAME ${name}
@@ -45,3 +47,4 @@ endfunction()
 
 add_negative_test(invalid_syntax_test invalid_syntax.myl)
 add_negative_test(type_error_test type_error.myl)
+add_negative_test(hindi_type_error_test hindi_type_error.myl)

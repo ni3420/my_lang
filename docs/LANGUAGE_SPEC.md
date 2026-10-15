@@ -97,11 +97,65 @@ fn log(message: string) {     // omitted return type means `void`
 - Calls are checked for argument count and argument types.
 - The function named `main` is the entry point for `myl build` / `myl run`.
 
+## Hindi keyword aliases
+
+Every core keyword has a Hinglish alias. The two spellings are interchangeable
+and can be mixed freely; they produce identical ASTs and semantics.
+
+| Hindi keyword | English equivalent | Meaning |
+|---------------|--------------------|---------|
+| `rakho x = 10;` | `let mut x = 10;` | mutable variable declaration |
+| `bolo expr;`  | `print(expr);`     | print statement (no parentheses) |
+| `agar`        | `if`               | conditional |
+| `warna`       | `else`             | alternative branch |
+| `repeat`      | `while`            | loop |
+| `kaam`        | `fn`               | function declaration |
+| `bhejo`       | `return`           | return statement |
+| `sahi` / `galat` | `true` / `false` | boolean literals |
+| `ank`         | `int`              | integer type |
+
+`rakho` always introduces a **mutable** binding (it is `let mut`, never plain
+`let`).
+
+```myl
+rakho x = 10;
+agar (x > 5) {
+    bolo "bada";
+} warna {
+    bolo "chhota";
+}
+repeat (x > 0) { x = ghatao(x, 1); }
+
+kaam badhao(a: ank, b: ank) -> ank {
+    bhejo jodo(a, b);
+}
+```
+
+## Script mode (implicit `main`)
+
+A file may contain top-level statements instead of a `main` function. In that
+case the compiler wraps all top-level statements into an implicit
+`kaam main()` / `fn main()` that returns `0`. Function declarations stay as
+they are. This lets small programs be written without a `main` wrapper:
+
+```myl
+rakho x = 10;
+bolo "Namaste Duniya!";   // prints Namaste Duniya!
+bolo x;                   // prints 10
+```
+
+If the file declares its own `main` **and** has top-level statements, the
+implicit `main` is emitted as a second symbol; avoid mixing the two styles.
+
 ## Built-in functions
 
 | Call | Behavior |
 |------|----------|
 | `print(value)` | Prints one value followed by a newline. Accepts `int`, `float`, `bool`, or `string`. |
+| `jodo(a, b)`   | Addition: `a + b`. Numeric operands; result is `float` if either operand is `float`. |
+| `ghatao(a, b)` | Subtraction: `a - b`. |
+| `guna(a, b)`   | Multiplication: `a * b`. |
+| `bhaag(a, b)`  | Division: `a / b` (integer `/` truncates toward zero). |
 
 ## Example
 

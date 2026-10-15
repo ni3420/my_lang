@@ -68,6 +68,17 @@ IDENT      [a-zA-Z_][a-zA-Z0-9_]*
 "or"         { return Or; }
 "not"        { return Not; }
 
+"rakho"      { return RakhoKw; }
+"bolo"       { return BoloKw; }
+"agar"       { return AgarKw; }
+"warna"      { return WarnaKw; }
+"repeat"     { return RepeatKw; }
+"kaam"       { return KaamKw; }
+"bhejo"      { return BhejoKw; }
+"sahi"       { return SahiKw; }
+"galat"      { return GalatKw; }
+"ank"        { return AnkKw; }
+
 {IDENT}      { yylval.str = new std::string(yytext); return Identifier; }
 
 {DIGIT}+                  { yylval.str = new std::string(yytext); return IntegerLiteral; }
@@ -162,6 +173,16 @@ static const char* token_kind_name(int tok) {
         case And: return "and";
         case Or: return "or";
         case Not: return "not";
+        case RakhoKw: return "rakho";
+        case BoloKw: return "bolo";
+        case AgarKw: return "agar";
+        case WarnaKw: return "warna";
+        case RepeatKw: return "repeat";
+        case KaamKw: return "kaam";
+        case BhejoKw: return "bhejo";
+        case SahiKw: return "sahi";
+        case GalatKw: return "galat";
+        case AnkKw: return "ank";
         case ::Identifier: return "identifier";
         case ::IntegerLiteral: return "integer";
         case ::FloatLiteral: return "float_literal";

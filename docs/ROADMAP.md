@@ -6,9 +6,9 @@ required; nothing is considered done until it is built and tested in Docker.
 ## Near term
 
 1. **Resolve the dangling-`else` ambiguity.**
-   The grammar currently reports 2 shift/reduce conflicts, resolved by Bison
-   shifting (conventional behavior). Make the rule explicit or document it
-   with `%expect`.
+   The grammar currently reports 4 shift/reduce conflicts (both `if`/`else` and
+   `agar`/`warna`), resolved by Bison shifting (conventional behavior). Make
+   the rule explicit or document it with `%expect`.
 
 2. **Scoped code generation.**
    Replace the flat variable map in `CodeGenContext` with a scope stack so

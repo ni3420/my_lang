@@ -56,6 +56,18 @@ void test_tokenize_keywords() {
     std::cout << "test_tokenize_keywords: PASS\n";
 }
 
+void test_tokenize_hindi_keywords() {
+    auto toks = lex("rakho bolo agar warna repeat kaam bhejo sahi galat ank");
+    std::vector<std::string> expected = {
+        "rakho", "bolo", "agar", "warna", "repeat", "kaam", "bhejo", "sahi", "galat", "ank"
+    };
+    assert(toks.size() == expected.size());
+    for (size_t i = 0; i < expected.size(); ++i) {
+        assert(toks[i].kind == expected[i]);
+    }
+    std::cout << "test_tokenize_hindi_keywords: PASS\n";
+}
+
 void test_tokenize_operators() {
     auto toks = lex("+ - * / % == != < <= > >= = ; : , ( ) { } ->");
     std::vector<std::string> expected = {
@@ -91,6 +103,7 @@ int main() {
     test_tokenize_string();
     test_tokenize_identifier();
     test_tokenize_keywords();
+    test_tokenize_hindi_keywords();
     test_tokenize_operators();
     test_comments_skipped();
     test_locations();
