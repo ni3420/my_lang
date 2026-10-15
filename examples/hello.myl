@@ -1,0 +1,7 @@
+fn main() ->
+ int { let x = 10; let y = 20; let message = "Hello, World!";
+
+print(message);
+ print(x + y * 3);
+
+return 0; }

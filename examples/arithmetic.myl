@@ -1,0 +1,11 @@
+fn main() -> int {
+    let a = 10 + 20 * 3;
+    let b = (10 + 20) * 3;
+    let c = 100 - 50 / 2;
+    let d = 7 % 3;
+    print(a);
+    print(b);
+    print(c);
+    print(d);
+    return 0;
+}

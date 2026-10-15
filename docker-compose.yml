@@ -1,0 +1,27 @@
+services:
+  # Interactive development environment. The source tree is bind-mounted so
+  # edits on the host are visible inside the container.
+  dev:
+    build:
+      context: .
+      target: dev
+    volumes:
+      - .:/home/developer/project
+    working_dir: /home/developer/project
+    environment:
+      - CC=clang-15
+      - CXX=clang++-15
+      - LLVM_CONFIG=/usr/bin/llvm-config-15
+    command: /bin/bash
+
+  # Reproducible build + test. Uses the source baked into the image (no bind
+  # mount) so results are exactly what CI would produce.
+  test:
+    build:
+      context: .
+      target: test
+    working_dir: /home/developer/project
+    environment:
+      - CC=clang-15
+      - CXX=clang++-15
+      - LLVM_CONFIG=/usr/bin/llvm-config-15
